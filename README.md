@@ -8,8 +8,6 @@
 
 Real-time edge ML system that classifies trailer/container occupancy as **EMPTY**, **PARTIAL**, or **FULL** using a live camera feed and YOLOv8-nano, running inference on a host PC with images captured from an Arduino-connected Arducam OV2640.
 
-Built for portfolio demonstration targeting **SkyBitz / AMETEK** IoT fleet management — cargo sensing and occupancy detection at the edge with minimal cloud bandwidth.
-
 ---
 
 ## Results
