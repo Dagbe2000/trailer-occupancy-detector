@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+env/
+
+# Secrets
+.env.local
+
+# Dataset (too large for GitHub — hosted on Roboflow)
+data/samples/
+datasets/
+*.cache
+
+# Model weights (too large — reproduce via train.py)
+runs/
+*.pt
+*.onnx
+
+# Runtime captures
+live_frame.jpg
+capture.jpg
+
+# Roboflow auto-generated
+roboflow.yaml
+
+# Scaffolded simulation (separate project)
+trailer-occupancy-detector/
+trailer-occupancy-detector-1/
+sketch_jun11a/
+
+# IDE
+.vscode/
+.idea/
+*.swp
