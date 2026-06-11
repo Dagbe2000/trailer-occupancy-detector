@@ -204,9 +204,9 @@ This project mirrors the cargo sensing pipeline used in fleet IoT platforms like
 
 ## Author
 
-**Wilfrid Hounkponou (Zoyo)**
-- Email: hounkponou@cua.edu
-- GitHub: [@Zoyo-Dev](https://github.com/Zoyo-Dev)
+**Wilfrid Hounkponou **
+- Email: wilfrid19921992@gmail.com
+- GitHub: [@Dagbe2000](https://github.com/Dagbe2000/
 
 ---
 
