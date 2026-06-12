@@ -4,6 +4,7 @@ DEMO MODE : Cloud-compatible. Simulated camera, no hardware needed.
 LIVE MODE : Local only. Real Arduino + YOLOv8.
 """
 
+import io
 import os
 import random
 import time
@@ -136,6 +137,10 @@ if b1.button("▶️ Start Detection", type="primary", use_container_width=True)
     st.session_state.update(running=True, history=[], events=0, frames=0, last_state=None)
 if b2.button("⏹️ Stop", use_container_width=True):
     st.session_state.running = False
+    if "live_ser" in st.session_state:
+        try: st.session_state.live_ser.close()
+        except Exception: pass
+        del st.session_state.live_ser
 
 
 # ── Demo mode ────────────────────────────────────────────────────────────────
@@ -202,41 +207,55 @@ if st.session_state.running and DEMO_MODE:
 
 
 # ── Live mode (local only) ───────────────────────────────────────────────────
-elif st.session_state.running and not DEMO_MODE:
+if st.session_state.running and not DEMO_MODE:
     try:
-        model = _YOLO(MODEL_PATH)
-        ser   = _serial.Serial(PORT, BAUD, timeout=10)
-        time.sleep(2)
-        t0 = time.time()
-        while time.time() - t0 < 5:
-            if ser.in_waiting and "READY" in ser.readline().decode(errors="ignore"):
-                break
-        while st.session_state.running:
-            ser.write(b"c")
-            buf = bytearray()
-            while True:
-                chunk = ser.read(1)
-                if not chunk: break
-                buf += chunk
-                if buf.endswith(b"##DONE##"):
-                    buf = buf[:-8]; break
-            js, je = buf.find(b"\xff\xd8"), buf.rfind(b"\xff\xd9")
-            if js != -1 and je != -1:
-                with open(SAVE_PATH,"wb") as f: f.write(buf[js:je+2])
-                res   = model(SAVE_PATH, verbose=False)
-                state = res[0].names[res[0].probs.top1].upper()
-                conf  = res[0].probs.top1conf.item()
-                if state != st.session_state.last_state:
-                    st.session_state.events += 1
-                    st.session_state.history.append({
-                        "Time":       datetime.now().strftime("%H:%M:%S"),
-                        "Transition": f"{st.session_state.last_state or 'START'} → {state}",
-                        "Confidence": f"{conf:.1%}",
-                    })
-                    st.session_state.last_state = state
-                st.session_state.frames += 1
-            time.sleep(0.5)
-        ser.close()
+        # Open serial once; persist across reruns
+        if "live_ser" not in st.session_state:
+            st.session_state.live_ser = _serial.Serial(PORT, BAUD, timeout=10)
+            time.sleep(2)
+
+        # Load model once; persist across reruns
+        if "live_model" not in st.session_state:
+            st.session_state.live_model = _YOLO(MODEL_PATH)
+
+        ser = st.session_state.live_ser
+        ser.write(b"c")
+        buf = bytearray()
+        while True:
+            chunk = ser.read(1)
+            if not chunk: break
+            buf += chunk
+            if buf.endswith(b"##DONE##"):
+                buf = buf[:-8]; break
+
+        js, je = buf.find(b"\xff\xd8"), buf.rfind(b"\xff\xd9")
+        if js != -1 and je != -1:
+            live_img = np.array(Image.open(io.BytesIO(buf[js:je+2])).convert("RGB"))
+            res   = st.session_state.live_model(live_img, verbose=False)
+            state = res[0].names[res[0].probs.top1].upper()
+            conf  = res[0].probs.top1conf.item()
+
+            st.session_state.cur_img   = live_img
+            st.session_state.cur_state = state
+            st.session_state.cur_conf  = conf
+            st.session_state.frames   += 1
+
+            if state != st.session_state.last_state:
+                st.session_state.events += 1
+                st.session_state.history.append({
+                    "Time":       datetime.now().strftime("%H:%M:%S"),
+                    "Transition": f"{st.session_state.last_state or 'START'} → {state}",
+                    "Confidence": f"{conf:.1%}",
+                })
+                st.session_state.last_state = state
+
+        time.sleep(0.5)
+        st.rerun()
+
     except Exception as e:
-        st.error(f"Serial error: {e}")
+        st.error(f"Live mode error: {e}")
         st.session_state.running = False
+        if "live_ser" in st.session_state:
+            try: st.session_state.live_ser.close()
+            except Exception: pass
+            del st.session_state.live_ser
