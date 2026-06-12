@@ -136,6 +136,7 @@ def _demo_frame(frame_idx: int) -> tuple[Image.Image, str, float]:
 st.set_page_config(page_title="Trailer Occupancy Detector", layout="wide", page_icon="🚛")
 st.title("🚛 SkyBitz — Trailer Occupancy Detector")
 st.markdown("**Edge ML · YOLOv8-nano · Arduino Nano 33 BLE · Real-time**")
+st.caption(f"{'🎬 Demo Mode — simulated camera' if DEMO_MODE else '🔌 Live Mode — Arduino connected'}")
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
