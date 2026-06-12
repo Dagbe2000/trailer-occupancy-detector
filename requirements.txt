@@ -2,6 +2,7 @@
 # For local live mode with Arduino + YOLO, use: pip install -r requirements-local.txt
 
 streamlit>=1.37.0
+streamlit-autorefresh>=1.0.1
 Pillow>=10.2.0
 numpy>=1.26.0
 python-dotenv>=1.0.0
