@@ -26,8 +26,10 @@ try:
 except ImportError:
     _YOLO_OK = False
 
+# Auto-detect: demo if hardware libs missing, live if both present
+# Override with DEMO_MODE=1 env var to force demo anywhere
 DEMO_MODE = (
-    os.environ.get("DEMO_MODE", "1") == "1"
+    os.environ.get("DEMO_MODE", "0") == "1"
     or not _SERIAL_OK
     or not _YOLO_OK
 )
@@ -136,12 +138,16 @@ if b2.button("⏹️ Stop", use_container_width=True):
     st.session_state.running = False
 
 
-# ── Demo mode: one frame per rerun ───────────────────────────────────────────
+# ── Demo mode ────────────────────────────────────────────────────────────────
 if st.session_state.running and DEMO_MODE:
 
+    # Advance one frame and cache it in session state
     state, conf = demo_state(st.session_state.frames)
     img         = gen_frame(state)
-    st.session_state.frames += 1
+    st.session_state.frames    += 1
+    st.session_state.cur_img    = img
+    st.session_state.cur_state  = state
+    st.session_state.cur_conf   = conf
 
     if state != st.session_state.last_state:
         st.session_state.events += 1
@@ -152,10 +158,17 @@ if st.session_state.running and DEMO_MODE:
         })
         st.session_state.last_state = state
 
+# Show cached frame (visible on current AND next rerun)
+if "cur_img" in st.session_state and (st.session_state.running or st.session_state.frames > 0):
+    state = st.session_state.cur_state
+    conf  = st.session_state.cur_conf
+
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("📷 Camera Feed")
-        st.image(img, caption=f"Frame #{st.session_state.frames}", use_container_width=True)
+        st.image(st.session_state.cur_img,
+                 caption=f"Frame #{st.session_state.frames}",
+                 use_container_width=True)
 
     with col2:
         st.subheader("📊 Occupancy State")
@@ -182,6 +195,8 @@ if st.session_state.running and DEMO_MODE:
         st.subheader("📋 State Change History")
         st.table(st.session_state.history[-10:])
 
+# Schedule next frame AFTER rendering (sleep here controls visible frame rate)
+if st.session_state.running and DEMO_MODE:
     time.sleep(1.0 / speed)
     st.rerun()
 
