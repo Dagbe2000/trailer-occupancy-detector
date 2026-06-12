@@ -239,11 +239,19 @@ def _update(image, state: str, conf: float) -> None:
 if st.session_state.running:
 
     if DEMO_MODE:
-        img, state, conf = _demo_frame(st.session_state.frames)
-        st.session_state.frames += 1
-        _update(img, state, conf)
-        time.sleep(1.0 / fps)
-        st.rerun()
+        status = st.empty()
+        status.info("🎬 Simulating — close tab or click Stop to end.")
+        try:
+            while st.session_state.running:
+                img, state, conf = _demo_frame(st.session_state.frames)
+                st.session_state.frames += 1
+                _update(img, state, conf)
+                time.sleep(1.0 / fps)
+        except Exception as exc:
+            st.error(f"Demo error: {exc}")
+        finally:
+            st.session_state.running = False
+            status.empty()
 
     else:
         try:
