@@ -1,7 +1,7 @@
 # Cloud / demo mode requirements (used by Streamlit Community Cloud)
 # For local live mode with Arduino + YOLO, use: pip install -r requirements-local.txt
 
-streamlit>=1.31.0
+streamlit>=1.37.0
 Pillow>=10.2.0
 numpy>=1.26.0
 python-dotenv>=1.0.0
